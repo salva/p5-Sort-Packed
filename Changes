@@ -1,0 +1,6 @@
+Revision history for Perl extension Sort::Packed.
+
+0.01  Sun Jun 15 19:16:13 2008
+	- original version; created by h2xs 1.23 with options
+		-An Sort::Packed
+

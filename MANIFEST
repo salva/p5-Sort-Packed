@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+MANIFEST
+Packed.xs
+ppport.h
+README
+t/Sort-Packed.t
+lib/Sort/Packed.pm
