@@ -70,42 +70,54 @@ radix_sort(unsigned char *pv, UV size, UV record_size, UV offset) {
         ptr += record_size;
     }
 
-    pos[0] = 0;
-    for (i = 0; i < 255; i++)
-        pos[i + 1] = pos[i] + count[i];
-
-    for (i = 0; i < 255; i++) {
-        unsigned char *current = pv + offset + pos[i] * record_size;
-        unsigned char *top = current + count[i] * record_size;
-        while (current < top) {
-            if (*current == i) {
-                pos[*current] ++;
-                current += record_size;
-            }
-            else {
-                unsigned char dest_char = *current;
-                unsigned char *dest = pv + offset + pos[dest_char] * record_size;
-                int k = record_size - offset;
-                while (0 < k-- ) {
-                    unsigned char tmp = current[k];
-                    current[k] = dest[k];
-                    dest[k] = tmp;
-                }
-                pos[dest_char]++;
-                count[dest_char]--;
+    if (offset + 1 == record_size) {
+        ptr = pv + offset;
+        for (i = 0; i < 256; i++) {
+            UV j = count[i];
+            while (j--) {
+                *ptr = i;
+                ptr += record_size;
             }
         }
     }
+    else {
+        pos[0] = 0;
+        for (i = 0; i < 255; i++)
+            pos[i + 1] = pos[i] + count[i];
 
-    /* dump_keys("out", pv, size, record_size, offset); */
+        for (i = 0; i < 255; i++) {
+            unsigned char *current = pv + offset + pos[i] * record_size;
+            unsigned char *top = current + count[i] * record_size;
+            while (current < top) {
+                if (*current == i) {
+                    pos[*current] ++;
+                    current += record_size;
+                }
+                else {
+                    unsigned char dest_char = *current;
+                    unsigned char *dest = pv + offset + pos[dest_char] * record_size;
+                    int k = record_size - offset;
+                    while (0 < k-- ) {
+                        unsigned char tmp = current[k];
+                        current[k] = dest[k];
+                        dest[k] = tmp;
+                    }
+                    pos[dest_char]++;
+                    count[dest_char]--;
+                }
+            }
+        }
 
-    offset1 = offset + 1;
-    if (offset1 < record_size) {
-        pos[255] += count[255];
-        for (last = i = 0; i < 256; last = pos[i++]) {
-            UV count = pos[i] - last;
-            if (count > 1)
-                radix_sort(pv + last * record_size, count, record_size, offset1);
+        /* dump_keys("out", pv, size, record_size, offset); */
+
+        offset1 = offset + 1;
+        if (offset1 < record_size) {
+            pos[255] += count[255];
+            for (last = i = 0; i < 256; last = pos[i++]) {
+                UV count = pos[i] - last;
+                if (count > 1)
+                    radix_sort(pv + last * record_size, count, record_size, offset1);
+            }
         }
     }
 }
