@@ -125,7 +125,7 @@ radix_sort(unsigned char *pv, UV size, UV record_size, UV offset) {
         }
     }
     else {
-        Perl_croak(aTHX_ "not implemented");
+        croak("not implemented");
     }
 }
 
