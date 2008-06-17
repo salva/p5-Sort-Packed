@@ -18,6 +18,8 @@
 #define TYPE_FLOAT_X86 3
 #define TYPE_LAST TYPE_FLOAT_X86
 
+#defined CUTOFF 0;
+
 /*
 #define MYDEBUG 0
 
@@ -54,71 +56,76 @@ dump_pos(UV *pos) {
 
 static void
 radix_sort(unsigned char *pv, UV size, UV record_size, UV offset) {
-    UV count[256];
-    UV pos[256];
-    UV i, last, offset1;
-    unsigned char *ptr, *end;
+    if (size > CUTOFF) {
+        UV count[256];
+        UV pos[256];
+        UV i, last, offset1;
+        unsigned char *ptr, *end;
 
-    /* dump_keys("in", pv, size, record_size, offset); */
+        /* dump_keys("in", pv, size, record_size, offset); */
 
-    for (i = 0; i < 256; i++)
-        count[i] = 0;
-    ptr = pv + offset;
-    end = ptr + size * record_size;
-    while (ptr < end) {
-        count[*ptr]++;
-        ptr += record_size;
-    }
-
-    if (offset + 1 == record_size) {
+        for (i = 0; i < 256; i++)
+            count[i] = 0;
         ptr = pv + offset;
-        for (i = 0; i < 256; i++) {
-            UV j = count[i];
-            while (j--) {
-                *ptr = i;
-                ptr += record_size;
+        end = ptr + size * record_size;
+        while (ptr < end) {
+            count[*ptr]++;
+            ptr += record_size;
+        }
+        
+        if (offset + 1 == record_size) {
+            ptr = pv + offset;
+            for (i = 0; i < 256; i++) {
+                UV j = count[i];
+                while (j--) {
+                    *ptr = i;
+                    ptr += record_size;
+                }
+            }
+        }
+        else {
+            pos[0] = 0;
+            for (i = 0; i < 255; i++)
+                pos[i + 1] = pos[i] + count[i];
+            
+            for (i = 0; i < 255; i++) {
+                unsigned char *current = pv + offset + pos[i] * record_size;
+                unsigned char *top = current + count[i] * record_size;
+                while (current < top) {
+                    if (*current == i) {
+                        pos[*current] ++;
+                        current += record_size;
+                    }
+                    else {
+                        unsigned char dest_char = *current;
+                        unsigned char *dest = pv + offset + pos[dest_char] * record_size;
+                        int k = record_size - offset;
+                        while (0 < k-- ) {
+                            unsigned char tmp = current[k];
+                            current[k] = dest[k];
+                            dest[k] = tmp;
+                        }
+                        pos[dest_char]++;
+                        count[dest_char]--;
+                    }
+                }
+            }
+            
+            /* dump_keys("out", pv, size, record_size, offset); */
+            
+            offset1 = offset + 1;
+            if (offset1 < record_size) {
+                pos[255] += count[255];
+                for (last = i = 0; i < 256; last = pos[i++]) {
+                    UV count = pos[i] - last;
+                    if (count > 1)
+                        radix_sort(pv + last * record_size, count, record_size, offset1);
+                }
             }
         }
     }
     else {
-        pos[0] = 0;
-        for (i = 0; i < 255; i++)
-            pos[i + 1] = pos[i] + count[i];
-
-        for (i = 0; i < 255; i++) {
-            unsigned char *current = pv + offset + pos[i] * record_size;
-            unsigned char *top = current + count[i] * record_size;
-            while (current < top) {
-                if (*current == i) {
-                    pos[*current] ++;
-                    current += record_size;
-                }
-                else {
-                    unsigned char dest_char = *current;
-                    unsigned char *dest = pv + offset + pos[dest_char] * record_size;
-                    int k = record_size - offset;
-                    while (0 < k-- ) {
-                        unsigned char tmp = current[k];
-                        current[k] = dest[k];
-                        dest[k] = tmp;
-                    }
-                    pos[dest_char]++;
-                    count[dest_char]--;
-                }
-            }
-        }
-
-        /* dump_keys("out", pv, size, record_size, offset); */
-
-        offset1 = offset + 1;
-        if (offset1 < record_size) {
-            pos[255] += count[255];
-            for (last = i = 0; i < 256; last = pos[i++]) {
-                UV count = pos[i] - last;
-                if (count > 1)
-                    radix_sort(pv + last * record_size, count, record_size, offset1);
-            }
-        }
+        Perl_croak(aTHX_ "not implemented");
     }
 }
 
