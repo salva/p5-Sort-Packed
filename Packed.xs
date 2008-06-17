@@ -18,7 +18,7 @@
 #define TYPE_FLOAT_X86 3
 #define TYPE_LAST TYPE_FLOAT_X86
 
-#defined CUTOFF 0;
+#define CUTOFF 0
 
 /*
 #define MYDEBUG 0
