@@ -4,14 +4,14 @@ use strict;
 use warnings;
 
 use blib;
-use Sort::Packed qw(sort_packed);
+use Sort::Packed qw(mergesort_packed);
 
 warn "set a breakpoint for sort_radix now\n";
 
 sub test {
     my ($format, @data) = @_;
     my $pack = pack "$format*", @data;
-    sort_packed $format, $pack;
+    mergesort_packed $format, $pack;
     my @unpack = unpack "$format*", $pack;
     my @sorted = sort { $a <=> $b } @data;
     my @resorted = sort { $a <=> $b } @unpack;

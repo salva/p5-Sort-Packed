@@ -21,7 +21,6 @@
 
 #define CUTOFF 16
 
-/*
 static void
 dump_keys(char *name, unsigned char *pv, UV nelems, UV record_size, UV offset) {
     int i;
@@ -47,7 +46,6 @@ dump_pos(UV *pos) {
     }
     fprintf(stderr, "\n");
 }
-*/
 
 static void
 radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
@@ -306,6 +304,7 @@ uchar_cmp(pTHX_
     while (--i) {
         if (*a != *b)
             return (*a < *b) ? -1 : 1;
+        a++; b++;
     }
     return 0;
 }
@@ -317,6 +316,7 @@ uint_cmp(pTHX_
     while (--i) {
         if (*a != *b)
             return (*a < *b) ? -1 : 1;
+        a++; b++;
     }
     return 0;
 }
@@ -328,6 +328,7 @@ ulong_cmp(pTHX_
     while (--i) {
         if (*a != *b)
             return (*a < *b) ? -1 : 1;
+        a++; b++;
     }
     return 0;
 }
@@ -425,6 +426,7 @@ CODE:
     nelems = len / record_size;
     if (nelems > 1) {
         extra.key_size = record_size;
+        dump_keys("in", pv, nelems, record_size, 0);
         if (SvOK(cmp)) {
             SV *cv = SvRV(cmp);
             HV *stash;
@@ -458,6 +460,7 @@ CODE:
         }
         if (ccmp != (my_cmp_t)&custom_cmp)
             post_radix(pv, nelems * rep, value_size, value_type, byte_order);
+        dump_keys("out", pv, nelems, record_size, 0);
     }
         
 
