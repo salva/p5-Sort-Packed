@@ -9,7 +9,10 @@ use Carp;
 require Exporter;
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(sort_packed reverse_packed);
+our @EXPORT_OK = qw(sort_packed
+                    radixsort_packed
+                    mergesort_packed
+                    reverse_packed);
 
 # byte_order:
 # 0 - big endian
@@ -78,11 +81,19 @@ sub _template_props {
     $dir, $vsize, $vtype, $byte_order, $rep
 }
 
-sub sort_packed {
+sub radixsort_packed {
     @_ == 2 or croak 'Usage: sort_packed($format, $vector)';
     my ($dir, $vsize, $vtype, $byte_order, $rep) = @{$cache{$_[0]} ||= [_template_props($_[0])]};
-    _sort_packed($_[1], $dir, $vsize, $vtype, $byte_order, $rep);
+    _radixsort_packed($_[1], $dir, $vsize, $vtype, $byte_order, $rep);
 }
+
+sub mergesort_packed {
+    @_ == 2 or croak 'Usage: radixsort_packed($format, $vector)';
+    my ($dir, $vsize, $vtype, $byte_order, $rep) = @{$cache{$_[0]} ||= [_template_props($_[0])]};
+    _mergesort_packed($_[1], undef, $dir, $vsize, $vtype, $byte_order, $rep);
+}
+
+*sort_packed = \&radixsort_packed;
 
 sub reverse_packed {
     @_ == 2 or croak 'Usage: reverse_packed($format, $vector)';
@@ -152,7 +163,7 @@ Perl builtins L<perlfunc/pack> and L<perlfunc/sort>.
 
 My other sorting modules L<Sort::Key> and L<Sort::Key::Radix>.
 
-The Wikipedia article abour radix sort:
+The Wikipedia article about radix sort:
 L<http://en.wikipedia.org/wiki/Radix_sort>.
 
 =head1 BUGS AND SUPPORT

@@ -3,19 +3,19 @@
 use strict;
 use warnings;
 
-use Test::More tests => 264;
-use Sort::Packed qw(sort_packed);
+use Test::More tests => 528;
+use Sort::Packed qw(radixsort_packed mergesort_packed);
 
 my $len = 10000;
 
 sub no_neg_zero { map { $_ || 0 } @_ }
 
 sub test_sort_packed {
-    my ($format, $rep, $data) = @_;
+    my ($sorter, $format, $rep, $data) = @_;
     my $packed = pack "$format*", ((@$data) x $rep);
     my @data = unpack "$format*", $packed;
     my @sorted = no_neg_zero sort { $a <=> $b } @data;
-    sort_packed $format, $packed;
+    $sorter->($format, $packed);
     my @unpacked = no_neg_zero unpack "$format*", $packed;
     my $r = is_deeply(\@unpacked, \@sorted,
                       "$format ".scalar(@data)." x $rep");
@@ -39,17 +39,19 @@ for my $len (1, 2, 4, 10, 20, 100, 200, 1000) {
         0 + $v1
     } 1..$len;
 
-    for my $rep (1, 3, 7) {
-        test_sort_packed n => $rep, \@int;
-        test_sort_packed v => $rep, \@int;
-        test_sort_packed N => $rep, \@int;
-        test_sort_packed V => $rep, \@int;
-        test_sort_packed i => $rep, \@int;
-        test_sort_packed I => $rep, \@int;
-        test_sort_packed j => $rep, \@int;
-        test_sort_packed J => $rep, \@int;
-        test_sort_packed f => $rep, \@double;
-        test_sort_packed d => $rep, \@double;
-        test_sort_packed F => $rep, \@double;
+    for my $sorter (\&radixsort_packed, \&mergesort_packed) {
+        for my $rep (1, 3, 7) {
+            test_sort_packed $sorter, n => $rep, \@int;
+            test_sort_packed $sorter, v => $rep, \@int;
+            test_sort_packed $sorter, N => $rep, \@int;
+            test_sort_packed $sorter, V => $rep, \@int;
+            test_sort_packed $sorter, i => $rep, \@int;
+            test_sort_packed $sorter, I => $rep, \@int;
+            test_sort_packed $sorter, j => $rep, \@int;
+            test_sort_packed $sorter, J => $rep, \@int;
+            test_sort_packed $sorter, f => $rep, \@double;
+            test_sort_packed $sorter, d => $rep, \@double;
+            test_sort_packed $sorter, F => $rep, \@double;
+        }
     }
 }
