@@ -18,14 +18,11 @@
 #define TYPE_FLOAT_X86 3
 #define TYPE_LAST TYPE_FLOAT_X86
 
-#define CUTOFF 0
+#define CUTOFF 16
 
 /*
-#define MYDEBUG 0
-
 static void
 dump_keys(char *name, unsigned char *pv, UV size, UV record_size, UV offset) {
-#if MYDEBUG != 0
     int i;
     fprintf(stderr, "%s\n", name);
     for (i = 0; i < size; i++) {
@@ -36,12 +33,10 @@ dump_keys(char *name, unsigned char *pv, UV size, UV record_size, UV offset) {
         }
         fprintf(stderr, "\n");
     }
-    fprintf(stderr, "\n\n");
-#endif
+    fprintf(stderr, "\n");
 }
 
 dump_pos(UV *pos) {
-#if MYDEBUG != 0
     int i, last = 0;
     fprintf(stderr, "\n\npos:");
     for (i=0; i < 256; i++) {
@@ -50,7 +45,6 @@ dump_pos(UV *pos) {
         last = pos[i];
     }
     fprintf(stderr, "\n");
-#endif
 }
 */
 
@@ -125,7 +119,50 @@ radix_sort(unsigned char *pv, UV size, UV record_size, UV offset) {
         }
     }
     else {
-        croak("not implemented");
+        UV i;
+        for (i = 1; i < size; i++) {
+            unsigned char *current = pv + i * record_size;
+            UV min = 0, max = i;
+            while (min < max) {
+                UV pivot = (min + max) / 2;
+                unsigned char *pivot_ptr = pv + pivot * record_size;
+                UV j;
+                /* fprintf(stderr, "min: %d, max: %d, pivot: %d\n", min, max, pivot); */
+                for (j = offset; j < record_size; j++) {
+                    if (pivot_ptr[j] < current[j]) {
+                        min = pivot + 1;
+                        goto continue_while_loop;
+                    }
+                    if (pivot_ptr[j] > current[j]) {
+                        max = pivot;
+                        goto continue_while_loop;
+                    }
+                }
+                max = pivot;
+                break;
+            continue_while_loop:
+                ;
+            }
+            /* fprintf(stderr, "rsize: %d, offset: %d, i: %d, max: %d\n",
+                    record_size, offset, i, max);
+                    dump_keys("before", pv, i + 1, record_size, offset); */
+            if (max < i) {
+                UV j;
+                for (j = offset; j < record_size; j++) {
+                    unsigned char *end = pv + max * record_size + j;
+                    unsigned char *ptr = pv + i * record_size + j;
+                    unsigned char tmp = *ptr;
+                    while (ptr > end) {
+                        unsigned char *next = ptr - record_size;
+                        *ptr = *next;
+                        ptr = next;
+                        /* dump_keys("between", pv, i + 1, record_size, offset); */
+                    }
+                    *ptr = tmp;
+                }
+            }
+            /* dump_keys("after", pv, i + 1, record_size, offset); */
+        }
     }
 }
 

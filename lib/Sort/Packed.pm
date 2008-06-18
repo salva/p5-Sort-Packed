@@ -84,6 +84,12 @@ sub sort_packed {
     _sort_packed($_[1], $dir, $vsize, $vtype, $byte_order, $rep);
 }
 
+sub reverse_packed {
+    @_ == 2 or croak 'Usage: reverse_packed($format, $vector)';
+    my (undef, $vsize, undef, undef, $rep) = @{$cache{$_[0]} ||= [_template_props($_[0])]};
+    _reverse_packed($_[1], $vsize * $rep);
+}
+
 1;
 __END__
 
@@ -93,49 +99,76 @@ Sort::Packed - Sort records packed in a vector
 
 =head1 SYNOPSIS
 
-  use Sort::Packed sort_packed;
-  my $vector = pack l => 12, 435, 34, 56, 43, 7;
-  sort_packed $vector, 'l';
-  print join(', ', unpack(l => $vector)), "\n";
-  
-  
+  use Sort::Packed qw(sort_packed);
+  my $vector = pack 'l*' => 12, 435, 34, 56, 43, 7;
+  sort_packed l => $vector;
+  print join(', ', unpack('l*' => $vector)), "\n";
 
 =head1 DESCRIPTION
 
-Stub documentation for Sort::Packed, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+This module allows to sort data packed in a perl scalar.
 
-Blah blah blah.
+Internally it uses a radix sort algorithm that is very fast.
+
 
 =head2 EXPORT
 
-None by default.
+The following functions can be imported from this module:
 
+=over 4
 
+=item sort_packed $template => $data
+
+sorts the records packed inside scalar C<$data>.
+
+C<$template> is a simplified C<pack> template. It has to contain a
+type indicator optionally followed by an exclamation mark and/or a
+repetition count. For instance:
+
+   "n" => unsigned short in big-endian order
+   "l!" => native signed long
+   "L!4" => records of four native unsigned longs
+   "C256" => records of 256 unsigned characters
+
+The template can be prefixed by a minus sign to indicate descending
+order (for instance, C<-n4>).
+
+Sub-byte size or variable length types can not be used (for instance,
+bit C<b>, hexadecimal C<h>, unicode C<U> or BER C<w> types are
+forbidden).
+
+Currently, templates containing several types (as for instance "nL")
+are not supported.
+
+=item reverse_packed $template => $data
+
+reverses the order of the records packed inside scalar C<$data>.
+
+=back
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
+Perl builtins L<perlfunc/pack> and L<perlfunc/sort>.
 
-If you have a mailing list set up for your module, mention it here.
+My other sorting modules L<Sort::Key> and L<Sort::Key::Radix>.
 
-If you have a web site set up for your module, mention it here.
+The Wikipedia article abour radix sort:
+L<http://en.wikipedia.org/wiki/Radix_sort>.
 
-=head1 AUTHOR
+=head1 BUGS AND SUPPORT
 
-salva, E<lt>salva@E<gt>
+None known, but this is an early release!
+
+Send bug reports via the CPAN bug tracking system at
+L<http://rt.cpan.org> or just drop my an e-mail with any problem you
+encounter while using this module.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008 by salva
+Copyright (C) 2008 by Salvador FandiE<ntilde>o (sfandino@yahoo.com).
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.0 or,
 at your option, any later version of Perl 5 you may have available.
-
 
 =cut
