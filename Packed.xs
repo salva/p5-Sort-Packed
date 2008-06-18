@@ -7,6 +7,7 @@
 #include "XSUB.h"
 
 #include "ppport.h"
+
 #include "merge.h"
 
 #define BYTE_ORDER_BE 0
@@ -208,6 +209,8 @@ reverse_packed(char *ptr, IV len, IV record_size) {
 
 static void
 pre_radix(unsigned char *pv, UV nelems, UV value_size, UV value_type, UV byte_order) {
+/*     fprintf(stderr, "pre_radix pv: %p, nelems: %d, value_size: %d, value_type: %d, byte_order: %d\n", */
+/*             pv, nelems, value_size, value_type, byte_order); */
     if (byte_order || value_type) {
         unsigned char *ptr = pv;
         unsigned char *end = ptr + nelems * value_size;
@@ -247,6 +250,8 @@ pre_radix(unsigned char *pv, UV nelems, UV value_size, UV value_type, UV byte_or
 
 static void
 post_radix(unsigned char *pv, UV nelems, UV value_size, UV value_type, UV byte_order) {
+/*     fprintf(stderr, "post_radix pv: %p, nelems: %d, value_size: %d, value_type: %d, byte_order: %d\n", */
+/*             pv, nelems, value_size, value_type, byte_order); */
     if (byte_order || value_type) {
         unsigned char *ptr = pv;
         unsigned char *end = ptr + nelems * value_size;
@@ -293,7 +298,15 @@ static int
 custom_cmp(pTHX_
            const unsigned char *a, const unsigned char *b,
            const my_extra *extra) {
+    /* work here */
     return 0;
+}
+
+static int
+custom_cmp_inv(pTHX_
+           const unsigned char *a, const unsigned char *b,
+           const my_extra *extra) {
+    return -custom_cmp(aTHX_ a, b, extra);
 }
 
 static int 
@@ -301,7 +314,7 @@ uchar_cmp(pTHX_
           const unsigned char *a, const unsigned char *b,
           const my_extra *extra) {
     UV i = extra->key_size;
-    while (--i) {
+    while (i--) {
         if (*a != *b)
             return (*a < *b) ? -1 : 1;
         a++; b++;
@@ -309,43 +322,17 @@ uchar_cmp(pTHX_
     return 0;
 }
 
-uint_cmp(pTHX_
-         const unsigned int *a, const unsigned int *b,
-         const my_extra *extra) {
-    UV i = extra->key_size;
-    while (--i) {
-        if (*a != *b)
-            return (*a < *b) ? -1 : 1;
-        a++; b++;
-    }
-    return 0;
-}
-
-ulong_cmp(pTHX_
-          const unsigned long *a, const unsigned long *b,
+static int 
+uchar_cmp_inv(pTHX_
+          const unsigned char *a, const unsigned char *b,
           const my_extra *extra) {
     UV i = extra->key_size;
-    while (--i) {
+    while (i--) {
         if (*a != *b)
-            return (*a < *b) ? -1 : 1;
+            return (*a < *b) ? 1 : -1;
         a++; b++;
     }
     return 0;
-}
-
-static my_cmp_t
-select_cmp(unsigned char *pv, UV *record_size) {
-    if ( ((IV)pv) % sizeof(unsigned long) == 0 &&
-         *record_size % sizeof(unsigned long) == 0 ) {
-        *record_size /= sizeof(unsigned long);
-        return (my_cmp_t)&ulong_cmp;
-    }
-    if ( ((IV)pv) % sizeof(unsigned int) == 0 &&
-         *record_size % sizeof(unsigned int) == 0 ) {
-        *record_size /= sizeof(unsigned int);
-        return (my_cmp_t)&uint_cmp;
-    }
-    return (my_cmp_t)uchar_cmp;
 }
 
 static void
@@ -426,19 +413,19 @@ CODE:
     nelems = len / record_size;
     if (nelems > 1) {
         extra.key_size = record_size;
-        dump_keys("in", pv, nelems, record_size, 0);
+        /* dump_keys("in", pv, nelems, record_size, 0); */
         if (SvOK(cmp)) {
             SV *cv = SvRV(cmp);
             HV *stash;
             if (SvTYPE(cv) != SVt_PVCV)
                 Perl_croak(aTHX_ "reference to comparison function expected");
-            ccmp = (my_cmp_t)&custom_cmp;
+            ccmp = (my_cmp_t)(dir > 0 ? &custom_cmp : &custom_cmp_inv);
             extra.cmp = cmp;
             extra.a = 0;
             extra.b = 0;
         }
         else {
-            extra.cmp = 0;
+            ccmp = (my_cmp_t)(dir > 0 ? &uchar_cmp : &uchar_cmp_inv);
             pre_radix(pv, nelems * rep, value_size, value_type, byte_order);
         }
         if (record_size < PSIZE / 2) {
@@ -448,8 +435,6 @@ CODE:
                    record_size, expanded_record_size,
                    pv);
         }
-        if (!extra.cmp)
-            ccmp = select_cmp(pv, &(extra.key_size));
         mergesort(aTHX_ pv, nelems, expanded_record_size, ccmp, &extra);
         
         if (expanded_record_size != record_size) {
@@ -460,7 +445,7 @@ CODE:
         }
         if (ccmp != (my_cmp_t)&custom_cmp)
             post_radix(pv, nelems * rep, value_size, value_type, byte_order);
-        dump_keys("out", pv, nelems, record_size, 0);
+        /* dump_keys("out", pv, nelems, record_size, 0); */
     }
         
 

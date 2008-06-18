@@ -104,6 +104,9 @@ mergesort(pTHX_
     unsigned char *f1, *f2, *t, *b, *tp2, *q, *l1, *l2;
     unsigned char *list2, *list1, *p2, *p, *last, **p1;
 
+ /*    fprintf(stderr, "mergesort base: %p, nmemb: %d, size: %d, cmp: %p, extra: %p\n", */
+/*             base, nmemb, size, cmp, cmp_extra); */
+
     if (size < PSIZE / 2)
         Perl_croak(aTHX_ "internal error: record size %d below minimum %d",
                    size, PSIZE / 2);
@@ -344,7 +347,7 @@ insertionsort(pTHX_ unsigned char *a, size_t n, size_t size,
               void *cmp_extra) {
 
     unsigned char *ai, *s, *t, *u, tmp;
-    int i;
+    int i, n1 = n;
     
     for (ai = a+size; --n >= 1; ai += size)
         for (t = ai; t > a; t -= size) {

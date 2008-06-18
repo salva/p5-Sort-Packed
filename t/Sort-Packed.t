@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 528;
+use Test::More tests => 1188;
 use Sort::Packed qw(radixsort_packed mergesort_packed);
 
 my $len = 10000;
@@ -11,11 +11,13 @@ my $len = 10000;
 sub no_neg_zero { map { $_ || 0 } @_ }
 
 sub test_sort_packed {
-    my ($sorter, $format, $rep, $data) = @_;
+    my ($sorter, $dir, $format, $rep, $data) = @_;
     my $packed = pack "$format*", ((@$data) x $rep);
     my @data = unpack "$format*", $packed;
-    my @sorted = no_neg_zero sort { $a <=> $b } @data;
-    $sorter->($format, $packed);
+    my @sorted = ( $dir eq '-'
+                   ? no_neg_zero(sort { $b <=> $a } @data)
+                   : no_neg_zero(sort { $a <=> $b } @data) );
+    $sorter->("$dir$format", $packed);
     my @unpacked = no_neg_zero unpack "$format*", $packed;
     my $r = is_deeply(\@unpacked, \@sorted,
                       "$format ".scalar(@data)." x $rep");
@@ -29,7 +31,7 @@ sub test_sort_packed {
     }
 }
 
-for my $len (1, 2, 4, 10, 20, 100, 200, 1000) {
+for my $len (1, 2, 4, 10, 20, 200) {
     my @int = map { (2 ** 32) * rand } 1..$len;
 
     my @double = map {
@@ -40,18 +42,20 @@ for my $len (1, 2, 4, 10, 20, 100, 200, 1000) {
     } 1..$len;
 
     for my $sorter (\&radixsort_packed, \&mergesort_packed) {
-        for my $rep (1, 3, 7) {
-            test_sort_packed $sorter, n => $rep, \@int;
-            test_sort_packed $sorter, v => $rep, \@int;
-            test_sort_packed $sorter, N => $rep, \@int;
-            test_sort_packed $sorter, V => $rep, \@int;
-            test_sort_packed $sorter, i => $rep, \@int;
-            test_sort_packed $sorter, I => $rep, \@int;
-            test_sort_packed $sorter, j => $rep, \@int;
-            test_sort_packed $sorter, J => $rep, \@int;
-            test_sort_packed $sorter, f => $rep, \@double;
-            test_sort_packed $sorter, d => $rep, \@double;
-            test_sort_packed $sorter, F => $rep, \@double;
+        for my $rep (1, 3, 5) {
+            for my $dir ('', '+', '-') {
+                test_sort_packed $sorter, $dir, n => $rep, \@int;
+                test_sort_packed $sorter, $dir, v => $rep, \@int;
+                test_sort_packed $sorter, $dir, N => $rep, \@int;
+                test_sort_packed $sorter, $dir, V => $rep, \@int;
+                test_sort_packed $sorter, $dir, i => $rep, \@int;
+                test_sort_packed $sorter, $dir, I => $rep, \@int;
+                test_sort_packed $sorter, $dir, j => $rep, \@int;
+                test_sort_packed $sorter, $dir, J => $rep, \@int;
+                test_sort_packed $sorter, $dir, f => $rep, \@double;
+                test_sort_packed $sorter, $dir, d => $rep, \@double;
+                test_sort_packed $sorter, $dir, F => $rep, \@double;
+            }
         }
     }
 }
