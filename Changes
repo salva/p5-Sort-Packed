@@ -1,5 +1,9 @@
 Revision history for Perl extension Sort::Packed.
 
+0.02  19 Jun, 2008
+        - add support for mergesort algorithm and mergesort custom.
+        - skip tests for formats not supported on old perls
+
 0.01  Sun Jun 15 19:16:13 2008
 	- original version; created by h2xs 1.23 with options
 		-An Sort::Packed
