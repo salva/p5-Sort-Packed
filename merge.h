@@ -118,7 +118,7 @@ mergesort(pTHX_
     if (!(size % ISIZE) && !(((char *)base - (char *)0) % ISIZE))
         iflag = 1;
 
-    Newx(list2, nmemb * size + PSIZE, char);
+    list2 = (unsigned char *)SvPVX(sv_2mortal(newSV(nmemb * size + PSIZE)));
 
     list1 = base;
     setup(aTHX_ list1, list2, nmemb, size, cmp, cmp_extra);
@@ -242,7 +242,6 @@ mergesort(pTHX_
         memmove(list2, list1, nmemb*size);
         list2 = list1;
     }
-    free(list2);
 }
 
 #define	swap(a, b) {					\

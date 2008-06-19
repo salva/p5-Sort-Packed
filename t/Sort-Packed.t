@@ -3,35 +3,53 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1188;
-use Sort::Packed qw(radixsort_packed mergesort_packed);
+use Test::More tests => 1260;
+use Sort::Packed qw(radixsort_packed mergesort_packed mergesort_packed_custom);
 
-my $len = 10000;
+my %can;
+
+for my $format (qw(n v N V i I j J f d F D q Q)) {
+    eval { my $ignore = pack $format, 1; $can{$format} = 1 };
+}
 
 sub no_neg_zero { map { $_ || 0 } @_ }
 
 sub test_sort_packed {
     my ($sorter, $dir, $format, $rep, $data) = @_;
-    my $packed = pack "$format*", ((@$data) x $rep);
-    my @data = unpack "$format*", $packed;
-    my @sorted = ( $dir eq '-'
-                   ? no_neg_zero(sort { $b <=> $a } @data)
-                   : no_neg_zero(sort { $a <=> $b } @data) );
-    $sorter->("$dir$format", $packed);
-    my @unpacked = no_neg_zero unpack "$format*", $packed;
-    my $r = is_deeply(\@unpacked, \@sorted,
-                      "$format ".scalar(@data)." x $rep");
-
-    unless ($r) {
-        if (open my $out, '>>', '/tmp/sort-packed.data') {
-            print $out "\$format='$format';\n";
-            print $out "\@data=(", join(',', @data), ");\n";
-            print $out "test(\$format, \@data);\n\n";
+ SKIP: {
+        skip "format $format not supported", 1 unless $can{$format};
+        my $packed = pack "$format*", ((@$data) x $rep);
+        my @data = unpack "$format*", $packed;
+        $packed = pack "$format*", @data;
+        my @sorted = ( $dir eq '-'
+                       ? no_neg_zero(sort { $b <=> $a } @data)
+                       : no_neg_zero(sort { $a <=> $b } @data) );
+        if ($sorter eq 'radix') {
+            radixsort_packed "$dir$format", $packed;
+        }
+        elsif ($sorter eq 'merge') {
+            mergesort_packed "$dir$format", $packed;
+        }
+        else {
+            mergesort_packed_custom { (unpack $format,$a)[0] <=> (unpack $format,$b)[0] } "$dir$format", $packed;
+        }
+        my @unpacked = no_neg_zero unpack "$format*", $packed;
+        my $r = is_deeply(\@unpacked, \@sorted,
+                          "$format ".scalar(@data)." x $rep");
+        unless ($r) {
+            # print STDERR "n: @sorted\np: @unpacked\n\n";
+            if (open my $out, '>>', '/tmp/sort-packed.data') {
+                s/(Inf)/'$1'/gi for @data;
+                print $out "\$format='$format';\n";
+                print $out "\@data=(", join(',', @data), ");\n";
+                print $out "test(\$format, \@data);\n\n";
+            }
         }
     }
+    1;
 }
 
-for my $len (1, 2, 4, 10, 20, 200) {
+for my $len (1, 2, 4, 20, 100) {
     my @int = map { (2 ** 32) * rand } 1..$len;
 
     my @double = map {
@@ -41,8 +59,8 @@ for my $len (1, 2, 4, 10, 20, 200) {
         0 + $v1
     } 1..$len;
 
-    for my $sorter (\&radixsort_packed, \&mergesort_packed) {
-        for my $rep (1, 3, 5) {
+    for my $sorter (qw(radix merge custom)) {
+        for my $rep (1, 4) {
             for my $dir ('', '+', '-') {
                 test_sort_packed $sorter, $dir, n => $rep, \@int;
                 test_sort_packed $sorter, $dir, v => $rep, \@int;
@@ -52,9 +70,12 @@ for my $len (1, 2, 4, 10, 20, 200) {
                 test_sort_packed $sorter, $dir, I => $rep, \@int;
                 test_sort_packed $sorter, $dir, j => $rep, \@int;
                 test_sort_packed $sorter, $dir, J => $rep, \@int;
+                test_sort_packed $sorter, $dir, q => $rep, \@int;
+                test_sort_packed $sorter, $dir, Q => $rep, \@int;
                 test_sort_packed $sorter, $dir, f => $rep, \@double;
                 test_sort_packed $sorter, $dir, d => $rep, \@double;
                 test_sort_packed $sorter, $dir, F => $rep, \@double;
+                test_sort_packed $sorter, $dir, D => $rep, \@double;
             }
         }
     }

@@ -1,6 +1,6 @@
 package Sort::Packed;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use strict;
 use warnings;
@@ -12,6 +12,8 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(sort_packed
                     radixsort_packed
                     mergesort_packed
+                    sort_packed_custom
+                    mergesort_packed_custom
                     reverse_packed);
 
 # byte_order:
@@ -95,6 +97,14 @@ sub mergesort_packed {
 
 *sort_packed = \&radixsort_packed;
 
+sub mergesort_packed_custom (&@) {
+    @_ == 3 or croak 'Usage: mergesort_packed_custom { cmp($a, $b) } $format, $vector';
+    my ($dir, $vsize, $vtype, $byte_order, $rep) = @{$cache{$_[1]} ||= [_template_props($_[1])]};
+    _mergesort_packed($_[2], $_[0], $dir, $vsize, $vtype, $byte_order, $rep);
+}
+
+*sort_packed_custom = \&radixsort_packed_custom;
+
 sub reverse_packed {
     @_ == 2 or croak 'Usage: reverse_packed($format, $vector)';
     my (undef, $vsize, undef, undef, $rep) = @{$cache{$_[0]} ||= [_template_props($_[0])]};
@@ -119,7 +129,9 @@ Sort::Packed - Sort records packed in a vector
 
 This module allows to sort data packed in a perl scalar.
 
-Internally it uses a radix sort algorithm that is very fast.
+It is very fast and uses very little memory. Usually, it is one order
+of magnitude faster than unpacking the data and sorting it with perl
+C<sort> builtin.
 
 
 =head2 EXPORT
@@ -128,9 +140,12 @@ The following functions can be imported from this module:
 
 =over 4
 
-=item sort_packed $template => $data
+=item radixsort_packed $template => $data
 
 sorts the records packed inside scalar C<$data>.
+
+It uses the radixsort algorithm, usually the faster for data that is
+not partially ordered.
 
 C<$template> is a simplified C<pack> template. It has to contain a
 type indicator optionally followed by an exclamation mark and/or a
@@ -150,6 +165,35 @@ forbidden).
 
 Currently, templates containing several types (as for instance "nL")
 are not supported.
+
+=item sort_packed $template => $data
+
+this subroutine is an alias for C<radixsort_packed>.
+
+=item mergesort_packed $template => $data
+
+this subroutine works as c<radixsort_packed> but uses the mergesort
+algorithm that can be faster for data that is not completely unordered.
+
+=item mergesort_packed_custom { CMP($a, $b) } $template => $data;
+
+this subroutine sorts the vector using a custom comparison routine as
+the perl builtin C<sort>.
+
+For instance:
+
+  # sorts by integer value modulo 16:
+  mergesort_packed_custom { ((unpack N => $a) % 16)
+                                      <=>
+                            ((unpack N => $b) % 16) } N => $vector
+
+Note that this function is very slow due to the Perl comparison
+function being called inside the O(NlogN) part of the mergesort
+algorithm.
+
+=item sort_packed_custom { CMP($a, $b) } $template => $data;
+
+this is an alias for C<mergesort_packed_custom>
 
 =item reverse_packed $template => $data
 
@@ -181,5 +225,8 @@ Copyright (C) 2008 by Salvador FandiE<ntilde>o (sfandino@yahoo.com).
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.0 or,
 at your option, any later version of Perl 5 you may have available.
+
+Mergesort algorithm based on code from NetBSD, Copyright (c) 1992,
+1993 The Regents of the University of California.
 
 =cut
