@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1260;
+use Test::More tests => 1262;
 use Sort::Packed qw(radixsort_packed mergesort_packed mergesort_packed_custom);
 
 my %can;
@@ -11,6 +11,13 @@ my %can;
 for my $format (qw(n v N V i I j J f d F D q Q)) {
     eval { my $ignore = pack $format, 1; $can{$format} = 1 };
 }
+
+# here we check how portable negative zeros are!
+
+my $nzero = unpack f => pack f => -1e-300;
+ok($nzero == -$nzero, "nzero == -nzero");
+ok(($nzero || 1) == 1, "nzero is false");
+# is($nzero, '-0');
 
 sub no_neg_zero { map { $_ || 0 } @_ }
 
@@ -21,9 +28,9 @@ sub test_sort_packed {
         my $packed = pack "$format*", ((@$data) x $rep);
         my @data = unpack "$format*", $packed;
         $packed = pack "$format*", @data;
-        my @sorted = ( $dir eq '-'
-                       ? no_neg_zero(sort { $b <=> $a } @data)
-                       : no_neg_zero(sort { $a <=> $b } @data) );
+        my @sorted = no_neg_zero( $dir eq '-'
+                                  ? (sort { $b <=> $a } @data)
+                                  : (sort { $a <=> $b } @data) );
         if ($sorter eq 'radix') {
             radixsort_packed "$dir$format", $packed;
         }
