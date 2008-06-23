@@ -1,5 +1,3 @@
-/*	$NetBSD: merge.c,v 1.11 2003/08/07 16:43:42 agc Exp $	*/
-
 /*-
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -46,15 +44,6 @@
  * (The default is pairwise merging.)
  */
 
-/*
-#include <sys/types.h>
-
-#include <assert.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-*/
-
 typedef int (*my_cmp_t)(pTHX_ const void *, const void *, const void *);
 
 static void
@@ -95,10 +84,10 @@ insertionsort(pTHX_ unsigned char *, size_t, size_t, my_cmp_t, void *);
     (((unsigned char *)(void *)(p) + PSIZE - 1 - (unsigned char *) 0) & ~(PSIZE - 1))))
 
 static void
-mergesort(pTHX_
-          void *base, size_t nmemb, size_t size,
-          my_cmp_t cmp,
-          void *cmp_extra) {
+my_mergesort(pTHX_
+             void *base, size_t nmemb, size_t size,
+             my_cmp_t cmp,
+             void *cmp_extra) {
     int i, sense;
     int big, iflag;
     unsigned char *f1, *f2, *t, *b, *tp2, *q, *l1, *l2;

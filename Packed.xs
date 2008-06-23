@@ -49,7 +49,7 @@ dump_pos(UV *pos) {
 }
 
 static void
-radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
+my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
     if (nelems > CUTOFF) {
         UV count[256];
         UV pos[256];
@@ -113,7 +113,7 @@ radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
                 for (last = i = 0; i < 256; last = pos[i++]) {
                     UV count = pos[i] - last;
                     if (count > 1)
-                        radixsort(pv + last * record_size, count, record_size, offset1);
+                        my_radixsort(pv + last * record_size, count, record_size, offset1);
                 }
             }
         }
@@ -396,7 +396,7 @@ CODE:
     nelems = len / record_size;
     if (nelems > 1) {
         pre_sort(pv, nelems * rep, value_size, value_type, byte_order);
-        radixsort((unsigned char *)pv, nelems, record_size, 0);
+        my_radixsort((unsigned char *)pv, nelems, record_size, 0);
         post_sort(pv, nelems * rep, value_size, value_type, byte_order);
         if (dir < 0)
             reverse_packed((unsigned char *)pv, nelems, record_size);
@@ -465,7 +465,7 @@ CODE:
                    pv);
         }
         PUTBACK;
-        mergesort(aTHX_ pv, nelems, expanded_record_size, ccmp, &extra);
+        my_mergesort(aTHX_ pv, nelems, expanded_record_size, ccmp, &extra);
         SPAGAIN;
         if (expanded_record_size != record_size) {
             unexpand(pv, nelems,
