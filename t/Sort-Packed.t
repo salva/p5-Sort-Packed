@@ -19,7 +19,7 @@ ok($nzero == -$nzero, "nzero == -nzero");
 ok(($nzero || 1) == 1, "nzero is false");
 # is($nzero, '-0');
 
-sub no_neg_zero { map { $_ || 0 } @_ }
+sub no_neg_zero { map { abs($_) == 0 ? 0 : $_ } @_ }
 
 sub test_sort_packed {
     my ($sorter, $dir, $format, $rep, $data) = @_;
@@ -40,7 +40,7 @@ sub test_sort_packed {
         else {
             mergesort_packed_custom { (unpack $format,$a)[0] <=> (unpack $format,$b)[0] } "$dir$format", $packed;
         }
-        my @unpacked = no_neg_zero unpack "$format*", $packed;
+        my @unpacked = no_neg_zero(unpack "$format*", $packed);
         my $r = is_deeply(\@unpacked, \@sorted,
                           "$format ".scalar(@data)." x $rep");
         unless ($r) {

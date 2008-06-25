@@ -1,5 +1,8 @@
 Revision history for Perl extension Sort::Packed.
 
+0.04  Jun 25, 2008
+        - try to solve some negative zero bug.
+
 0.03  Jun 23, 2008
         - resolv conflict in BSD based unixen having their own
           merge/radixsort.
