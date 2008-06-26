@@ -22,8 +22,9 @@
 
 #define CUTOFF 16
 
+/*
 static void
-dump_keys(char *name, unsigned char *pv, UV nelems, UV record_size, UV offset) {
+dump_keys(pTHX_ char *name, unsigned char *pv, UV nelems, UV record_size, UV offset) {
     int i;
     fprintf(stderr, "%s\n", name);
     for (i = 0; i < nelems; i++) {
@@ -37,7 +38,7 @@ dump_keys(char *name, unsigned char *pv, UV nelems, UV record_size, UV offset) {
     fprintf(stderr, "\n");
 }
 
-dump_pos(UV *pos) {
+dump_pos(pTHX_ UV *pos) {
     int i, last = 0;
     fprintf(stderr, "\n\npos:");
     for (i=0; i < 256; i++) {
@@ -47,6 +48,7 @@ dump_pos(UV *pos) {
     }
     fprintf(stderr, "\n");
 }
+*/
 
 static void
 my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
@@ -56,7 +58,7 @@ my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
         UV i, last, offset1;
         unsigned char *ptr, *end;
 
-        /* dump_keys("in", pv, nelems, record_size, offset); */
+        /* dump_keys(aTHX_ "in", pv, nelems, record_size, offset); */
 
         for (i = 0; i < 256; i++)
             count[i] = 0;
@@ -105,7 +107,7 @@ my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
                 }
             }
             
-            /* dump_keys("out", pv, nelems, record_size, offset); */
+            /* dump_keys(aTHX_ "out", pv, nelems, record_size, offset); */
             
             offset1 = offset + 1;
             if (offset1 < record_size) {
@@ -145,7 +147,7 @@ my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
             }
             /* fprintf(stderr, "rsize: %d, offset: %d, i: %d, max: %d\n",
                     record_size, offset, i, max);
-                    dump_keys("before", pv, i + 1, record_size, offset); */
+                    dump_keys(aTHX_ "before", pv, i + 1, record_size, offset); */
             if (max < i) {
                 UV j;
                 for (j = offset; j < record_size; j++) {
@@ -156,12 +158,12 @@ my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
                         unsigned char *next = ptr - record_size;
                         *ptr = *next;
                         ptr = next;
-                        /* dump_keys("between", pv, i + 1, record_size, offset); */
+                        /* dump_keys(aTHX_ "between", pv, i + 1, record_size, offset); */
                     }
                     *ptr = tmp;
                 }
             }
-            /* dump_keys("after", pv, i + 1, record_size, offset); */
+            /* dump_keys(aTHX_ "after", pv, i + 1, record_size, offset); */
         }
     }
 }
@@ -427,7 +429,7 @@ CODE:
     nelems = len / record_size;
     if (nelems > 1) {
         extra.key_size = record_size;
-        /* dump_keys("in", pv, nelems, record_size, 0); */
+        /* dump_keys(aTHX_ "in", pv, nelems, record_size, 0); */
         if (SvOK(cmp)) {
             GV *gv;
             SV *cv = SvRV(cmp);
@@ -475,7 +477,7 @@ CODE:
         }
         if (!extra.cmp)
             post_sort(pv, nelems * rep, value_size, value_type, byte_order);
-        /* dump_keys("out", pv, nelems, record_size, 0); */
+        /* dump_keys(aTHX_ "out", pv, nelems, record_size, 0); */
     }
         
 
