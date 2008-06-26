@@ -1,6 +1,6 @@
 package Sort::Packed;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use strict;
 use warnings;
@@ -26,13 +26,12 @@ our @EXPORT_OK = qw(sort_packed
 # 2 - float
 # 3 - float x86
 
-my %nv_format = (
-                 '5839b4c876bebf3f' => 'LE',
-                 '3fbfbe76c8b43958' => 'BE',
-                 '83c0caa145b6f3fdfb3f0000' => 'LE_x86',
-		 '3ffbfbe76c8b4395810624dd2f1a9fbe' => 'BE',
-		 'be9f1a2fdd24068195438b6ce7fbfb3f' => 'LE',
-                 '83c0caa145b6f3fdfb3f000000000000' => 'LE_x86');
+my %nv_format = ( '5839b4c876bebf3f' => 'LE',
+                  '3fbfbe76c8b43958' => 'BE',
+                  '83c0caa145b6f3fdfb3f0000' => 'LE_x86',
+                  '3ffbfbe76c8b4395810624dd2f1a9fbe' => 'BE',
+                  'be9f1a2fdd24068195438b6ce7fbfb3f' => 'LE',
+                  '83c0caa145b6f3fdfb3f000000000000' => 'LE_x86');
 
 my $double_format = $nv_format{unpack 'H*' => pack d => 0.124} || 'LE';
 my $double_byte_order = ($double_format =~ /^BE/ ? 0 : 1);
@@ -136,7 +135,7 @@ C<sort> builtin.
 
 =head2 EXPORT
 
-The following functions can be imported from this module:
+The following functions are available from the module:
 
 =over 4
 
