@@ -1,6 +1,6 @@
 package Sort::Packed;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use strict;
 use warnings;
@@ -211,15 +211,14 @@ L<http://en.wikipedia.org/wiki/Radix_sort>.
 
 =head1 BUGS AND SUPPORT
 
-None known, but this is an early release!
-
 Send bug reports via the CPAN bug tracking system at
 L<http://rt.cpan.org> or just drop my an e-mail with any problem you
 encounter while using this module.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008 by Salvador FandiE<ntilde>o (sfandino@yahoo.com).
+Copyright (C) 2008, 2009 by Salvador FandiE<ntilde>o
+(sfandino@yahoo.com).
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.0 or,
