@@ -169,7 +169,7 @@ my_radixsort(unsigned char *pv, UV nelems, UV record_size, UV offset) {
 }
 
 static void
-reverse_packed(char *ptr, IV len, IV record_size) {
+reverse_packed(unsigned char *ptr, IV len, IV record_size) {
     if (record_size % sizeof(unsigned int) == 0) {
         int *start, *end;
         record_size /= sizeof(int);
@@ -305,8 +305,8 @@ custom_cmp(pTHX_
     ENTER;
     SAVETMPS;
     /* fprintf(stderr, "custom_cmp a: %p, b: %p, $a: %p, $b: %p\n", a, b, extra->a, extra->b); */
-    sv_setpvn(extra->a, a, extra->key_size);
-    sv_setpvn(extra->b, b, extra->key_size);
+    sv_setpvn(extra->a, (const char *)a, extra->key_size);
+    sv_setpvn(extra->b, (const char *)b, extra->key_size);
     PUSHMARK(SP);
     PUTBACK;
     call_sv(extra->cmp, G_SCALAR);
@@ -385,7 +385,7 @@ _radixsort_packed(vector, dir, value_size, value_type, byte_order, rep)
    UV rep
 CODE:
     STRLEN len;
-    char *pv = SvPV(vector, len);
+    unsigned char *pv = (unsigned char *)SvPV(vector, len);
     UV record_size = value_size * rep;
     UV nelems;
     /* Perl_warn(aTHX_ "vector: %p, dir: %d, vsize: %d, vtype: %d bo: %d, rep: %d",
@@ -398,10 +398,10 @@ CODE:
     nelems = len / record_size;
     if (nelems > 1) {
         pre_sort(pv, nelems * rep, value_size, value_type, byte_order);
-        my_radixsort((unsigned char *)pv, nelems, record_size, 0);
+        my_radixsort(pv, nelems, record_size, 0);
         post_sort(pv, nelems * rep, value_size, value_type, byte_order);
         if (dir < 0)
-            reverse_packed((unsigned char *)pv, nelems, record_size);
+            reverse_packed(pv, nelems, record_size);
     }
 
 void
@@ -460,9 +460,9 @@ CODE:
         }
         if (record_size < PSIZE / 2) {
             expanded_record_size = PSIZE / 2;
-            pv = SvPVX(sv_2mortal(newSV(nelems * expanded_record_size)));
+            pv = (unsigned char *)SvPVX(sv_2mortal(newSV(nelems * expanded_record_size)));
             /* Newx(pv, nelems * expanded_record_size, unsigned char); */
-            expand(SvPV_nolen(vector), nelems,
+            expand((unsigned char *)SvPV_nolen(vector), nelems,
                    record_size, expanded_record_size,
                    pv);
         }
@@ -472,8 +472,8 @@ CODE:
         if (expanded_record_size != record_size) {
             unexpand(pv, nelems,
                      record_size, expanded_record_size,
-                     SvPV_nolen(vector));
-            pv = SvPV_nolen(vector);
+                     (unsigned char *)SvPV_nolen(vector));
+            pv = (unsigned char *)SvPV_nolen(vector);
         }
         if (!extra.cmp)
             post_sort(pv, nelems * rep, value_size, value_type, byte_order);
