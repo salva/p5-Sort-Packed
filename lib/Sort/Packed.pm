@@ -1,6 +1,6 @@
 package Sort::Packed;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use strict;
 use warnings;
@@ -9,12 +9,13 @@ use Carp;
 require Exporter;
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(sort_packed
-                    radixsort_packed
-                    mergesort_packed
-                    sort_packed_custom
-                    mergesort_packed_custom
-                    reverse_packed);
+our @EXPORT_OK = qw( sort_packed
+                     radixsort_packed
+                     mergesort_packed
+                     sort_packed_custom
+                     mergesort_packed_custom
+                     reverse_packed
+                     shuffle_packed );
 
 # byte_order:
 # 0 - big endian
@@ -110,6 +111,12 @@ sub reverse_packed {
     _reverse_packed($_[1], $vsize * $rep);
 }
 
+sub shuffle_packed {
+    @_ == 2 or croak 'Usage: shuffle_packed($format, $vector)';
+    my (undef, $vsize, undef, undef, $rep) = @{$cache{$_[0]} ||= [_template_props($_[0])]};
+    _shuffle_packed($_[1], $vsize * $rep);
+}
+
 1;
 __END__
 
@@ -198,6 +205,10 @@ this is an alias for C<mergesort_packed_custom>
 
 reverses the order of the records packed inside scalar C<$data>.
 
+=item shuffle_packed $template => $data
+
+shuffles the records packed inside scalar C<$data>.
+
 =back
 
 =head1 SEE ALSO
@@ -217,7 +228,7 @@ encounter while using this module.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008, 2009 by Salvador FandiE<ntilde>o
+Copyright (C) 2008, 2009, 2012 by Salvador FandiE<ntilde>o
 (sfandino@yahoo.com).
 
 This library is free software; you can redistribute it and/or modify

@@ -210,6 +210,23 @@ reverse_packed(unsigned char *ptr, IV len, IV record_size) {
 }
 
 static void
+shuffle_packed(unsigned char *ptr, IV len, IV record_size) {
+    if (len > 0) {
+        while (--len) {
+            IV i = (len + 1) * Drand01();
+            IV j;
+            for (j = 0; j < record_size; j++) {
+                unsigned char *ptr_a = ptr + len * record_size;
+                unsigned char *ptr_b = ptr + i * record_size;
+                unsigned char tmp = ptr_a[j];
+                ptr_a[j] = ptr_b[j];
+                ptr_b[j] = tmp;
+            }
+        }
+    }
+}
+
+static void
 pre_sort(unsigned char *pv, UV nelems, UV value_size, UV value_type, UV byte_order) {
 /*     fprintf(stderr, "pre_sort pv: %p, nelems: %d, value_size: %d, value_type: %d, byte_order: %d\n", */
 /*             pv, nelems, value_size, value_type, byte_order); */
@@ -496,3 +513,18 @@ CODE:
     nelems = len / record_size;
     reverse_packed((unsigned char *)pv, nelems, record_size);
 
+void
+_shuffle_packed(vector, record_size)
+     SV *vector
+     IV record_size
+CODE:
+     STRLEN len;
+     char *pv = SvPV(vector, len);
+     UV nelems;
+     if (record_size <= 0)
+         Perl_croak(aTHX_ "bad record size %d", record_size);
+     if (len % record_size != 0)
+         Perl_croak(aTHX_ "vector length %d is not a multiple of record nelems %d", len, record_size);
+     nelems = len / record_size;
+     shuffle_packed((unsigned char *)pv, nelems, record_size);
+     

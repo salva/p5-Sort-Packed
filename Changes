@@ -1,5 +1,8 @@
 Revision history for Perl extension Sort::Packed.
 
+0.07  Feb 14, 2012
+        - add shuffle_packed function
+
 0.06  Nov 17, 2009
         - filter merge.h with dos2unix and several signed/unsigned
           char casts to make SUN C compiler happy
