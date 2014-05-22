@@ -210,7 +210,7 @@ reverse_packed(unsigned char *ptr, IV len, IV record_size) {
 }
 
 static void
-shuffle_packed(unsigned char *ptr, IV len, IV record_size) {
+shuffle_packed(pTHX_ unsigned char *ptr, IV len, IV record_size) {
     if (len > 0) {
         while (--len) {
             IV i = (len + 1) * Drand01();
@@ -526,5 +526,5 @@ CODE:
      if (len % record_size != 0)
          Perl_croak(aTHX_ "vector length %d is not a multiple of record nelems %d", len, record_size);
      nelems = len / record_size;
-     shuffle_packed((unsigned char *)pv, nelems, record_size);
+     shuffle_packed(aTHX_ (unsigned char *)pv, nelems, record_size);
      

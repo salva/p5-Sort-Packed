@@ -1,5 +1,8 @@
 Revision history for Perl extension Sort::Packed.
 
+0.08  May 24, 2014
+        - on perl 5.20 Drand01() requires the perl context to be around
+
 0.07  Feb 14, 2012
         - add shuffle_packed function
 
