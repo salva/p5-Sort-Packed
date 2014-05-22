@@ -402,7 +402,7 @@ _radixsort_packed(vector, dir, value_size, value_type, byte_order, rep)
    UV rep
 CODE:
     STRLEN len;
-    unsigned char *pv = (unsigned char *)SvPV(vector, len);
+    unsigned char *pv = (unsigned char *)SvPV_force(vector, len);
     UV record_size = value_size * rep;
     UV nelems;
     /* Perl_warn(aTHX_ "vector: %p, dir: %d, vsize: %d, vtype: %d bo: %d, rep: %d",
@@ -432,7 +432,7 @@ _mergesort_packed(vector, cmp, dir, value_size, value_type, byte_order, rep)
     UV rep
 CODE:
     STRLEN len;
-    unsigned char *pv = (unsigned char *)SvPV(vector, len);
+    unsigned char *pv = (unsigned char *)SvPV_force(vector, len);
     UV record_size = value_size * rep;
     UV expanded_record_size = record_size;
     UV nelems;
@@ -504,7 +504,7 @@ _reverse_packed(vector, record_size)
     IV record_size
 CODE:
     STRLEN len;
-    char *pv = SvPV(vector, len);
+    char *pv = SvPV_force(vector, len);
     UV nelems;
     if (record_size <= 0)
         Perl_croak(aTHX_ "bad record size %d", record_size);
@@ -519,7 +519,7 @@ _shuffle_packed(vector, record_size)
      IV record_size
 CODE:
      STRLEN len;
-     char *pv = SvPV(vector, len);
+     char *pv = SvPV_force(vector, len);
      UV nelems;
      if (record_size <= 0)
          Perl_croak(aTHX_ "bad record size %d", record_size);
