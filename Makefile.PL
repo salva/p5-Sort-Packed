@@ -8,4 +8,9 @@ WriteMakefile( NAME => 'Sort::Packed',
                ABSTRACT_FROM => 'lib/Sort/Packed.pm',
                PREREQ_PM => { Test::More => 0 },
                AUTHOR => 'Salvador Fandino <sfandino@yahoo.com>',
-               INC => '-I.' );
+               INC => '-I.',
+               META_MERGE => {
+                   resources => {
+                       repository => 'https://github.com/salva/p5-Sort-Packed',
+                   },
+               });
